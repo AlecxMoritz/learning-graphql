@@ -3,24 +3,33 @@ const {
     GraphQLObjectType,
     GraphQLString,
     GraphQLInt,
+    GraphQLList,
     GraphQLSchema
 } = graphql;
 const axios = require('axios');
 
 const CompanyType = new GraphQLObjectType({
     name : 'Company',
-    fields : {
+    // using the arrow syntax we can get around the issue with circular references
+    fields : () => ({
         id : { type : GraphQLString },
         name : { type : GraphQLString },
-        description : { type : GraphQLString }
-    }
+        description : { type : GraphQLString },
+        users : { 
+            type : new GraphQLList(UserType),
+            resolve(parentValue, args) {
+                return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`)
+                    .then(res => res.data);
+            }
+        }
+    })
 });
 // * You can think of resolve as how different nodes 'get' to each other
 
 
 const UserType = new GraphQLObjectType({
     name : 'User',
-    fields : {
+    fields : () => ({
         // when the incoming data and the type have the same name
         // GraphQL can map it automatically
         id : { type : GraphQLString },
@@ -35,7 +44,7 @@ const UserType = new GraphQLObjectType({
                 .then(res => res.data)
             }
         }
-    }
+    })
 });
 
 
