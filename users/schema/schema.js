@@ -7,14 +7,36 @@ const {
 } = graphql;
 const axios = require('axios');
 
+const CompanyType = new GraphQLObjectType({
+    name : 'Company',
+    fields : {
+        id : { type : GraphQLString },
+        name : { type : GraphQLString },
+        description : { type : GraphQLString }
+    }
+});
+
 const UserType = new GraphQLObjectType({
     name : 'User',
     fields : {
-        id : { type : GraphQLString},
-        firstName : { type : GraphQLString},
-        age : { type : GraphQLInt}
+        // when the incoming data and the type have the same name
+        // GraphQL can map it automatically
+        id : { type : GraphQLString },
+        firstName : { type : GraphQLString },
+        age : { type : GraphQLInt },
+        // when they are different, we have to give it a resolve function
+        // to help GraphQL figure out how to get that data
+        company : { 
+            type : CompanyType,
+            resolve(parentValue, args) {
+                return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
+                .then(res => res.data)
+            }
+        }
     }
 });
+
+
 
 const RootQuery = new GraphQLObjectType({
     name : 'RootQueryType',
